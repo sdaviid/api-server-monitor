@@ -21,6 +21,13 @@ from app.config import(
     ALGORITHM,
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
+from app.models.schemas.user import UserDetail
+from app.models.schemas.token import(
+    Token,
+    TokenData
+)
+from app.models.domain.user import User
+from app.core.database import SessionLocal
 
 fake_users_db = {
     "johndoe": {
@@ -34,50 +41,22 @@ fake_users_db = {
 }
 
 
-class Token(BaseModel):
-    access_token: str
-    token_type: str
 
 
-class TokenData(BaseModel):
-    username: Union[str, None] = None
 
-
-class User(BaseModel):
-    username: str
-    email: Union[str, None] = None
-    full_name: Union[str, None] = None
-    disabled: Union[bool, None] = None
-
-
-class UserInDB(User):
-    hashed_password: str
-    password: str
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 
-def verify_password(plain_password, hashed_password):
-    return True if plain_password == hashed_password else False
 
 
-
-
-def get_user(db, username: str):
-    if username in db:
-        user_dict = db[username]
-        return UserInDB(**user_dict)
-
-
-def authenticate_user(fake_db, username: str, password: str):
-    user = get_user(fake_db, username)
-    if not user:
+def authenticate_user(username: str, password: str):
+    response_user = User.check_login(session=SessionLocal(), user=username, password=password)
+    if not response_user:
         return False
-    if not verify_password(password, user.password):
-        return False
-    return user
+    return response_user[0]
 
 
 def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None):
@@ -105,13 +84,13 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = get_user(fake_users_db, username=token_data.username)
+    user = User.get_user(session=SessionLocal(), user=token_data.username)
     if user is None:
         raise credentials_exception
-    return user
+    return user[0]
 
 
 async def get_current_active_user(current_user: User = Depends(get_current_user)):
-    if current_user.disabled:
+    if not current_user.active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
