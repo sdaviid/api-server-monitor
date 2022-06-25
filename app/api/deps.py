@@ -29,21 +29,6 @@ from app.models.schemas.token import(
 from app.models.domain.user import User
 from app.core.database import SessionLocal
 
-fake_users_db = {
-    "johndoe": {
-        "username": "johndoe",
-        "full_name": "John Doe",
-        "email": "johndoe@example.com",
-        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
-        "password": "123456",
-        "disabled": False,
-    }
-}
-
-
-
-
-
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")

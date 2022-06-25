@@ -12,12 +12,12 @@ from app.config import(
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
 from app.api.deps import(
-    fake_users_db,
-    Token,
-    User,
     authenticate_user,
     create_access_token,
     get_current_active_user
+)
+from app.models.schemas.token import(
+    Token
 )
 
 router = APIRouter()
