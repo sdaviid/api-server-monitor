@@ -6,3 +6,4 @@ python_jose==3.3.0
 SQLAlchemy==1.4.37
 starlette==0.17.1
 python-multipart==0.0.5	
+uvicorn==0.18.1
