@@ -62,20 +62,25 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        options = {"verify_signature": True, "verify_aud": False, "exp": True}
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options=options)
         username: str = payload.get("sub")
         if username is None:
+            print('aki1')
             raise credentials_exception
         token_data = TokenData(username=username)
     except JWTError:
+        print('aki2')
         raise credentials_exception
-    user = User.get_user(session=SessionLocal(), user=token_data.username)
-    if user is None:
+    audience = payload.get('aud')
+    if not audience == 'cli-web-monitor':
+        print(payload.get('aud'))
+        print('aki3')
         raise credentials_exception
-    return user[0]
+    return payload.get('sub')
 
 
 async def get_current_active_user(current_user: User = Depends(get_current_user)):
-    if not current_user.active:
+    if not current_user:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
