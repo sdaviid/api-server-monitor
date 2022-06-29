@@ -23,7 +23,7 @@ router = APIRouter()
 
 
 @router.get("/status/")
-async def monitor_status(current_user: User = Depends(get_current_active_user), monitor: Monitor = Depends(get_Monitor)):
+async def monitor_status(current_user: str = Depends(get_current_active_user), monitor: Monitor = Depends(get_Monitor)):
     inst_monitor = get_Monitor()
     return {
         'bandwidth': {

@@ -66,16 +66,12 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options=options)
         username: str = payload.get("sub")
         if username is None:
-            print('aki1')
             raise credentials_exception
         token_data = TokenData(username=username)
     except JWTError:
-        print('aki2')
         raise credentials_exception
     audience = payload.get('aud')
     if not audience == 'cli-web-monitor':
-        print(payload.get('aud'))
-        print('aki3')
         raise credentials_exception
     return payload.get('sub')
 
