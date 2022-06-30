@@ -10,16 +10,8 @@ from sqlalchemy.orm import Session
 from starlette.responses import RedirectResponse
 
 
-from app.core.database import(
-    SessionLocal,
-    engine,
-    Base
-)
 
 from app.api.base import api_router
-# from fastapi import FastAPI, File, UploadFile
-
-Base.metadata.create_all(bind=engine)
 
 
 app = FastAPI()

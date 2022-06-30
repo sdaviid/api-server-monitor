@@ -5,8 +5,7 @@ from fastapi import(
 )
 
 from app.api.deps import(
-    User,
-    get_current_active_user
+    allow_access_resource
 )
 from app.core.monitor import(
     Monitor,
@@ -18,12 +17,16 @@ from app.utils.utils import(
 )
 
 
+
 router = APIRouter()
 
 
 
-@router.get("/status/")
-async def monitor_status(current_user: str = Depends(get_current_active_user), monitor: Monitor = Depends(get_Monitor)):
+@router.get(
+    "/status/",
+    dependencies=[Depends(allow_access_resource)]
+)
+async def monitor_status(monitor: Monitor = Depends(get_Monitor)):
     inst_monitor = get_Monitor()
     return {
         'bandwidth': {

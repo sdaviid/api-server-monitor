@@ -1,8 +1,12 @@
 from datetime import datetime, timedelta
-from typing import Union
+from typing import(
+    Union,
+    List
+)
 
 from fastapi import(
     Depends,
+    Request,
     HTTPException,
     status
 )
@@ -21,27 +25,11 @@ from app.config import(
     ALGORITHM,
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
-from app.models.schemas.user import UserDetail
-from app.models.schemas.token import(
-    Token,
-    TokenData
-)
-from app.models.domain.user import User
-from app.core.database import SessionLocal
-
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-
-
-
-def authenticate_user(username: str, password: str):
-    response_user = User.check_login(session=SessionLocal(), user=username, password=password)
-    if not response_user:
-        return False
-    return response_user[0]
 
 
 def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None):
@@ -67,7 +55,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
     except jwt.ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -83,10 +70,38 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
             detail="Incorrect JWT Audience",
             headers={"WWW-Authenticate": "invalid_token"},
         )
-    return payload.get('sub')
+    return payload
 
 
-async def get_current_active_user(current_user: str = Depends(get_current_user)):
+async def get_current_active_user(current_user: dict = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
+
+
+
+
+class RoleValidate:
+    def __init__(self, allowed_roles: List):
+        self.allowed_roles = allowed_roles
+
+    def __call__(self, request: Request, user: dict = Depends(get_current_active_user)):
+        if user:
+            has_break = False
+            for role in user['role']:
+                if role in self.allowed_roles:
+                    continue
+                else:
+                    has_break = True
+            if has_break == True:
+                raise HTTPException(status_code=403, detail="Operation not permitted")
+
+
+
+
+
+allow_create_resource = RoleValidate(["admin"])
+allow_access_resource = RoleValidate(["admin", "server"])
+
+
+
